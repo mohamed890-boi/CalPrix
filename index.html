@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egg Sales Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #e67e22;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        #calculateBtn {
+            background-color: #e67e22;
+        }
+        #calculateBtn:hover {
+            background-color: #d35400;
+        }
+        #printBtn {
+            background-color: #3498db;
+        }
+        #printBtn:hover {
+            background-color: #2980b9;
+        }
+        #saveTxtBtn {
+            background-color: #2ecc71;
+        }
+        #saveTxtBtn:hover {
+            background-color: #27ae60;
+        }
+        #saveImgBtn {
+            background-color: #e74c3c;
+        }
+        #saveImgBtn:hover {
+            background-color: #c0392b;
+        }
+        #languageBtn {
+            background-color: #9b59b6;
+            margin-bottom: 20px;
+        }
+        #languageBtn:hover {
+            background-color: #8e44ad;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            display: none;
+        }
+        .invoice {
+            font-family: monospace;
+            white-space: pre;
+            background-color: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .date-input {
+            display: flex;
+            align-items: center;
+        }
+        .date-input input {
+            flex: 1;
+        }
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .buttons-container button {
+            flex: 1;
+        }
+        [dir="rtl"] {
+            text-align: right;
+        }
+        [dir="ltr"] {
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="languageBtn" onclick="toggleLanguage()">English/العربية</button>
+        
+        <h1 id="appTitle">حساب بيع البيض</h1>
+        
+        <div class="form-group">
+            <label for="date" id="dateLabel">تاريخ البيع:</label>
+            <div class="date-input">
+                <input type="date" id="date">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="price" id="priceLabel">ثمن البيضة (درهم):</label>
+            <input type="number" id="price" step="0.01" min="0">
+        </div>
+        
+        <div class="form-group">
+            <label for="quantity" id="quantityLabel">الكمية (عدد البيض):</label>
+            <input type="number" id="quantity" min="1" value="1">
+        </div>
+        
+        <div class="form-group">
+            <label for="customerName" id="customerLabel">اسم الزبون:</label>
+            <input type="text" id="customerName">
+        </div>
+        
+        <div class="form-group">
+            <label for="city" id="cityLabel">المدينة:</label>
+            <input type="text" id="city">
+        </div>
+        
+        <div class="form-group">
+            <label for="phone" id="phoneLabel">رقم الهاتف:</label>
+            <input type="tel" id="phone">
+        </div>
+        
+        <button id="calculateBtn" onclick="calculate()">حساب المبلغ</button>
+        
+        <div id="result">
+            <h3 id="invoiceTitle">الفاتورة:</h3>
+            <div id="invoice" class="invoice"></div>
+            <div class="buttons-container">
+                <button id="printBtn" onclick="printInvoice()">طباعة الفاتورة</button>
+                <button id="saveTxtBtn" onclick="saveInvoice()">حفظ كملف نصي</button>
+                <button id="saveImgBtn" onclick="saveAsImage()">حفظ كصورة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- إضافة مكتبة html2canvas لتحويل HTML إلى صورة -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <script>
+        // الكائنات للغات
+        const translations = {
+            en: {
+                appTitle: "Egg Sales Calculator",
+                dateLabel: "Sale Date:",
+                priceLabel: "Price per Egg (DH):",
+                quantityLabel: "Quantity (Eggs):",
+                customerLabel: "Customer Name:",
+                cityLabel: "City:",
+                phoneLabel: "Phone:",
+                calculateBtn: "Calculate Total",
+                invoiceTitle: "INVOICE",
+                printBtn: "Print Invoice",
+                saveTxtBtn: "Save as Text",
+                saveImgBtn: "Save as Image",
+                languageBtn: "العربية/English",
+                invoiceTemplate: (date, customer, city, phone, price, quantity, total) => `
+==============================
+       EGG SALES INVOICE
+==============================
+Date: ${date}
+Customer: ${customer}
+City: ${city}
+Phone: ${phone}
+------------------------------
+Price per egg: ${price} DH
+Quantity: ${quantity} eggs
+------------------------------
+Total Amount: ${total} DH
+==============================
+Thank you for your business!
+                `,
+                requiredFields: "Please fill all required fields",
+                fileName: (customer, date) => `egg_invoice_${customer}_${date}`
+            },
+            ar: {
+                appTitle: "حساب بيع البيض",
+                dateLabel: "تاريخ البيع:",
+                priceLabel: "ثمن البيضة (درهم):",
+                quantityLabel: "الكمية (عدد البيض):",
+                customerLabel: "اسم الزبون:",
+                cityLabel: "المدينة:",
+                phoneLabel: "رقم الهاتف:",
+                calculateBtn: "حساب المبلغ",
+                invoiceTitle: "الفاتورة",
+                printBtn: "طباعة الفاتورة",
+                saveTxtBtn: "حفظ كملف نصي",
+                saveImgBtn: "حفظ كصورة",
+                languageBtn: "English/العربية",
+                invoiceTemplate: (date, customer, city, phone, price, quantity, total) => `
+==============================
+         فاتورة بيع البيض
+==============================
+التاريخ: ${date}
+الزبون: ${customer}
+المدينة: ${city}
+الهاتف: ${phone}
+------------------------------
+ثمن البيضة: ${price} درهم
+الكمية: ${quantity} بيضة
+------------------------------
+المبلغ الإجمالي: ${total} درهم
+==============================
+شكرا لكم على ثقتكم!
+                `,
+                requiredFields: "الرجاء إدخال جميع البيانات المطلوبة",
+                fileName: (customer, date) => `فاتورة_بيض_${customer}_${date}`
+            }
+        };
+
+        let currentLanguage = 'ar';
+
+        // تعيين التاريخ الحالي كقيمة افتراضية
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const dateStr = today.toISOString().substr(0, 10);
+            document.getElementById('date').value = dateStr;
+            applyLanguage();
+        });
+
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'ar' ? 'en' : 'ar';
+            document.documentElement.dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            const lang = translations[currentLanguage];
+            document.getElementById('appTitle').textContent = lang.appTitle;
+            document.getElementById('dateLabel').textContent = lang.dateLabel;
+            document.getElementById('priceLabel').textContent = lang.priceLabel;
+            document.getElementById('quantityLabel').textContent = lang.quantityLabel;
+            document.getElementById('customerLabel').textContent = lang.customerLabel;
+            document.getElementById('cityLabel').textContent = lang.cityLabel;
+            document.getElementById('phoneLabel').textContent = lang.phoneLabel;
+            document.getElementById('calculateBtn').textContent = lang.calculateBtn;
+            document.getElementById('invoiceTitle').textContent = lang.invoiceTitle;
+            document.getElementById('printBtn').textContent = lang.printBtn;
+            document.getElementById('saveTxtBtn').textContent = lang.saveTxtBtn;
+            document.getElementById('saveImgBtn').textContent = lang.saveImgBtn;
+            document.getElementById('languageBtn').textContent = lang.languageBtn;
+        }
+
+        function calculate() {
+            // الحصول على القيم من المدخلات
+            const date = document.getElementById('date').value;
+            const price = parseFloat(document.getElementById('price').value);
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const customerName = document.getElementById('customerName').value;
+            const city = document.getElementById('city').value;
+            const phone = document.getElementById('phone').value;
+            
+            // التحقق من إدخال جميع الحقول
+            if (!date || isNaN(price) || isNaN(quantity) || !customerName) {
+                alert(translations[currentLanguage].requiredFields);
+                return;
+            }
+            
+            // تنسيق التاريخ
+            const formattedDate = formatDate(date);
+            
+            // حساب المبلغ الإجمالي
+            const total = price * quantity;
+            
+            // إنشاء الفاتورة باللغة المختارة
+            const lang = translations[currentLanguage];
+            const invoiceText = lang.invoiceTemplate(
+                formattedDate,
+                customerName || (currentLanguage === 'en' ? 'N/A' : 'غير محدد'),
+                city || (currentLanguage === 'en' ? 'N/A' : 'غير محدد'),
+                phone || (currentLanguage === 'en' ? 'N/A' : 'غير محدد'),
+                price.toFixed(2),
+                quantity,
+                total.toFixed(2)
+            );
+            
+            // عرض النتيجة
+            document.getElementById('invoice').innerText = invoiceText;
+            document.getElementById('result').style.display = 'block';
+        }
+        
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+            
+            if (currentLanguage === 'en') {
+                return `${month}/${day}/${year}`;
+            } else {
+                return `${day}/${month}/${year}`;
+            }
+        }
+        
+        function printInvoice() {
+            const invoiceContent = document.getElementById('invoice').innerText;
+            const printWindow = window.open('', '', 'width=600,height=600');
+            printWindow.document.write('<pre>' + invoiceContent + '</pre>');
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }
+        
+        function saveInvoice() {
+            const invoiceContent = document.getElementById('invoice').innerText;
+            const blob = new Blob([invoiceContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            
+            // إنشاء اسم الملف باستخدام اسم الزبون والتاريخ
+            const customerName = document.getElementById('customerName').value || 
+                               (currentLanguage === 'en' ? 'invoice' : 'فاتورة');
+            const date = document.getElementById('date').value;
+            const fileName = translations[currentLanguage].fileName(customerName, date);
+            
+            a.download = `${fileName}.txt`;
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function saveAsImage() {
+            const invoiceElement = document.getElementById('invoice');
+            
+            html2canvas(invoiceElement).then(canvas => {
+                const link = document.createElement('a');
+                const customerName = document.getElementById('customerName').value || 
+                                     (currentLanguage === 'en' ? 'invoice' : 'فاتورة');
+                const date = document.getElementById('date').value;
+                const fileName = translations[currentLanguage].fileName(customerName, date);
+                
+                link.download = `${fileName}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
